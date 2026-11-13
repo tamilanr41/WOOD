@@ -1,0 +1,45 @@
+import mongoose from "mongoose";
+
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mariya_plywoods";
+
+type MongooseCache = {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+};
+
+declare global {
+  var _mongooseCache: MongooseCache | undefined;
+}
+
+const cached: MongooseCache = global._mongooseCache ?? {
+  conn: null,
+  promise: null,
+};
+global._mongooseCache = cached;
+
+/**
+ * Connect to MongoDB using a global connection cache so Next.js dev HMR
+ * does not open redundant connections.
+ */
+export async function connectDB(): Promise<typeof mongoose> {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(MONGODB_URI, {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 5000,
+      })
+      .catch((err) => {
+        cached.promise = null;
+        throw err;
+      });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
