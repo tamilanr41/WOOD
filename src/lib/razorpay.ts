@@ -1,13 +1,13 @@
 import crypto from "node:crypto";
 
 export function isRazorpayConfigured(): boolean {
-  return Boolean(
-    process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
-  );
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  return Boolean(keyId && keySecret);
 }
 
 export function getRazorpayPublicKey(): string {
-  return process.env.RAZORPAY_KEY_ID || "";
+  return process.env.RAZORPAY_KEY_ID?.trim() || "";
 }
 
 export async function createRazorpayOrder(params: {
@@ -21,8 +21,8 @@ export async function createRazorpayOrder(params: {
   mode: "razorpay" | "simulated_test";
 }> {
   const amountPaise = Math.round(params.amountInRupees * 100);
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
 
   if (!keyId || !keySecret) {
     // Test-mode fallback when Razorpay credentials are not yet configured
@@ -68,7 +68,7 @@ export function verifyRazorpayPaymentSignature(params: {
   razorpayPaymentId: string;
   razorpaySignature: string;
 }): boolean {
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
   if (!keySecret) {
     // Allow simulated test-mode verification only when no live/test keys exist
     return params.razorpayOrderId.startsWith("order_test_");
