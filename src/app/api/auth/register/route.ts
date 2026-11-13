@@ -36,11 +36,17 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const userCount = await User.countDocuments();
+    const role =
+      userCount === 0 || email === "admin@mariyaplywoods.com"
+        ? "admin"
+        : "customer";
+
     const user = await User.create({
       name,
       email,
       passwordHash,
-      role: "customer",
+      role,
       phone,
     });
 
